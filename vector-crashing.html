@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" dir="ltr" lang="fr">
+
+	<head>
+		<title>
+					test VectorRace
+		</title>
+
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/jquery.svg.js"></script>
+		<script type="text/javascript" src="js/jquery.svganim.js"></script>
+
+
+
+		<script type="text/javascript">
+		/*Diccionario con funciones del camino.
+		La id es el rango en el eje x. [a , b]*/
+		var FuncTrack = {'0-700': [0, 20], '0-700-2': [0, 100], '700-800': [0.6, -400], '80-340': [Infinity, 800], '100-320': [Infinity, 700], '800-700': [-0.8, 980],'700-0': [0, 420], '700-0-2': [0, 320] }
+		function continueLine(div, newX, newY, oldArray, arraySetter) {
+			var pendX = ( newX - oldArray[0] ); //alert(pendX);
+			var pendY = ( newY - oldArray[1] ); //alert("newY: "+newY+" oldArray[1]: "+oldArray[1]+" pendY: "+pendY);
+			comp = comprobarXY(newX, newY, oldArray, pendX, pendY); //alert(comp);
+			var svg = $('#example1').svg('get');
+			var g = svg.group({stroke: 'black', 'stroke-width': 2});
+			if (!comp) {				
+				l = svg.line(g, oldArray[0], oldArray[1], parseFloat(newX), parseFloat(newY));
+				c = svg.circle(g, parseFloat(newX), parseFloat(newY), 3, {fill: "black", stroke: "black", 'stroke-width': 0} );
+				$("#pendx").html(pendX/10+" []/t");
+				$("#pendy").html(pendY/10+" []/t");
+				putDots(newX, newY, pendX, pendY);
+				return [newX, newY];
+			}
+			else {
+				alert("Chocaste en ( "+comp[0]+"; "+comp[1]+" )");
+				l = svg.line(g, oldArray[0], oldArray[1], parseFloat(comp[0]), parseFloat(comp[1]));
+				c = svg.circle(g, parseFloat(comp[0]), parseFloat(comp[1]), 3, {fill: "black", stroke: "black", 'stroke-width': 0} );
+				putDots(oldArray[0], oldArray[1], 0, 0);
+				return [oldArray[0], oldArray[1]];
+			}
+		}
+		function putDots(valX, valY, pendX, pendY) {
+			$.each(dots, function(index) {
+				var dnewx = valX + pendX + dotsdif[index][0];
+				var dnewy = valY + pendY + dotsdif[index][1];
+				$(this).animate({'svgCx': dnewx, 'svgCy': dnewy});
+			});
+		}
+		function intp2(string) {
+			//return parseFloat(string) +2
+			return parseFloat(string)
+		}
+		function comprobarXY(newX, newY, oldArray, pendX, pendY) {
+			var choco = false;
+			//alert(newX+" "+newY);
+			movefuncPend = pendY/pendX; //movefuncPend = movefuncPend * -1;			
+			movefuncB = newY - newX * movefuncPend; //alert(movefuncB);
+			movefunc = "y="+pendY/pendX+" x+"+movefuncB; //alert(movefunc);
+			//alert(movefuncPend);
+			$.each(FuncTrack, function(key, value) {
+				if ( value[0] == Infinity || value[0] == -Infinity ) {
+					alert(movefuncPend);
+					result = movefuncPend * parseFloat(value[1]) + movefuncB;
+					//yrangemin = parseFloat(key.split("-")[0]); yrangemax = parseFloat(key.split("-")[1]);
+					if ( parseFloat(key.split("-")[0]) < parseFloat(key.split("-")[1])) {
+						yrangemin = parseFloat(key.split("-")[0]);
+						yrangemax = parseFloat(key.split("-")[1]);
+					}
+					else {
+						yrangemin = parseFloat(key.split("-")[1]);
+						yrangemax = parseFloat(key.split("-")[0]);
+					}
+					if (newX < oldArray[0]) {
+						movmaxX = oldArray[0];
+						movminX = newX;
+					}
+					else {
+						movmaxX = newX;
+						movminX = oldArray[0];
+					}
+					if ( result <= yrangemax && yrangemin <= result && movminX <= value[1] && value[1] <= movmaxX ) {
+						//alert('Te chocaste a en x='+value[1]+" y="+result);
+						choco = [value[1], result];
+						return false;
+					}
+				}
+				//else if (movefuncPend != 0) { //TODO: Remover condicional(hace crashear bordes de f no Infinite
+				else {
+					if (movefuncPend != Infinity && movefuncPend != -Infinity) {
+						//result = value[1] - movefuncB; result = result / movefuncPend;
+						result = (value[1] - movefuncB)/ ( movefuncPend - value[0]);
+						//alert(result);
+						//xrangemin = parseFloat(key.split("-")[0]); xrangemax = parseFloat(key.split("-")[1]);
+						if ( parseFloat(key.split("-")[0]) < parseFloat(key.split("-")[1])) {
+							xrangemin = parseFloat(key.split("-")[0]);
+							xrangemax = parseFloat(key.split("-")[1]);
+						}
+						else {
+							xrangemin = parseFloat(key.split("-")[1]);
+							xrangemax = parseFloat(key.split("-")[0]);
+						}
+						if (newX < oldArray[0]) {
+							movmaxX = oldArray[0];
+							movminX = newX;
+						}
+						else {
+							movmaxX = newX;
+							movminX = oldArray[0];
+						}
+						if (result < xrangemax && xrangemin < result && result <= movmaxX && movminX <= result) {
+							var choqY = result * movefuncPend + movefuncB
+							choco = [result, choqY]; 
+							return false;
+							//alert('Te chocaste x='+result+" y="+choqY);
+						}
+					}
+					else {					
+						result = value[0] * newX + value[1]; //alert(result + " newY "+newY+" oldY "+oldArray[1]);
+						//xrangemin = parseFloat(key.split("-")[0]); xrangemax = parseFloat(key.split("-")[1]);
+						if ( parseFloat(key.split("-")[0]) < parseFloat(key.split("-")[1])) {
+							xrangemin = parseFloat(key.split("-")[0]);
+							xrangemax = parseFloat(key.split("-")[1]);
+						}
+						else {
+							xrangemin = parseFloat(key.split("-")[1]);
+							xrangemax = parseFloat(key.split("-")[0]);
+						}
+						if ( newY < oldArray[1]) {
+							movmaxY = oldArray[1];
+							movminY = newY;
+						}
+						else {
+							movmaxY = newY;
+							movminY = oldArray[1];
+						}
+						if ( result <= movmaxY && movminY <= result && xrangemin < newX && newX < xrangemax) {
+							//alert('Te chocaste1 x='+newX+" y="+result);
+							choco = [newX, result];
+							return false;
+						}
+					}					
+				}				
+			});
+			if (choco != false){
+				return choco;
+			}
+			else {
+				return false;
+			}
+		}
+		
+		function trackBuilder(svg, trackVar) {
+			var bord = svg.group({stroke: 'black', 'stroke-width': 2});
+			$.each(trackVar, function(key, value){
+				if ( value[0] == Infinity || value[0] == -Infinity ) {
+					xi = value[1];
+					yi = parseFloat(key.split("-")[0]);
+					xf = value[1];
+					yf = parseFloat(key.split("-")[1]);
+				}
+				else {
+					xi = parseFloat(key.split("-")[0]);
+					yi = xi * value[0] + value[1];
+					xf = parseFloat(key.split("-")[1]);
+					yf = xf * value[0] + value[1];
+				}				
+				svg.line(bord, xi, yi, xf, yf);
+			});
+		}
+		
+		var lastxy = new Array(10, 50);
+		var dots = [];
+		var dotsdif= [[10, -10], [10, 0], [10, 10], [0, -10], [0, 0], [0, 10], [-10, -10], [-10, 0], [-10, 10]];
+		$(document).ready(function(){
+			$('#example1').svg({onLoad: drawInitial});
+			$("#settextvar").click(function() {
+				var textvar = $("#textvar").attr('value');
+				textvar = textvar.replace("{","").replace("}","").replace(/ /gi,'').replace(/\[/gi,"").replace(/\'/gi,"");
+				var outVar = {};
+				$(textvar.split('],')).each(function(index, value){
+					if (value.length > 3) {
+						//alert(value);
+						outVar[value.split(":")[0]] = [parseFloat(value.split(":")[1].split(',')[0]), parseFloat(value.split(":")[1].split(',')[1])];
+					}
+				});
+				FuncTrack = outVar;				
+				var svg = $('#example1').svg('get');
+				svg.clear(true);
+				trackBuilder(svg, outVar);
+				initialDots(svg);							
+			});
+		});
+		function drawInitial(svg) {
+			//svg.load("back.svg", {addTo:true});
+			var g = svg.group({stroke: 'black', 'stroke-width': 2});
+			svg.line(g, 0, 50, 10, 50);
+			//Borders
+			/*
+			var bord = svg.group({stroke: 'black', 'stroke-width': 2});
+			svg.line(bord, 0, 20, 800, 20);
+			svg.line(bord, 0, 100, 700, 100);
+			svg.line(bord, 800, 20, 800, 420);
+			svg.line(bord, 700, 100, 700, 320);
+			svg.line(bord, 0, 420, 800, 420);
+			svg.line(bord, 0, 320, 700, 320);*/
+			trackBuilder(svg, FuncTrack);
+			//End Borders
+			initialDots(svg);
+		}
+		function initialDots(svg) {
+			cir = svg.group({fill: 'white', stroke: 'red', strokeWidth: 1});
+			dots[0] = svg.circle(cir, 20, 40, 3);
+			dots[1] = svg.circle(cir, 20, 50, 3);
+			dots[2] = svg.circle(cir, 20, 60, 3);
+			dots[3] = svg.circle(cir, 10, 40, 3);
+			dots[4] = svg.circle(cir, 10, 50, 3);
+			dots[5] = svg.circle(cir, 10, 60, 3);
+			dots[6] = svg.circle(cir, 0, 40, 3);
+			dots[7] = svg.circle(cir, 0, 50, 3);
+			dots[8] = svg.circle(cir, 0, 60, 3);
+			$.each(dots, function(index) {
+				$(this).click(function() {				
+					//var x = intp2($(this).attr("cx"));
+					var x = parseFloat($(this).attr("cx"));
+					//var y = intp2($(this).attr("cy"));
+					var y = parseFloat($(this).attr("cy"));
+					lastxy = continueLine($("#example1"), x, y, lastxy);
+				});			
+			});
+		}
+	  	</script>
+		<style type="text/css">
+			.canvas{
+				position: relative;
+				width: 100%;
+				height: 500px;
+				background: url("img/fond2.png") repeat bottom left;
+			}
+		</style>
+	</head>
+	<body>
+	<div class="limiter">			
+				<h1>
+					test VectorRace 0.1.4 - Crashing
+				</h1>					
+				<div id="example1" class="canvas">					
+				</div>
+		</div>
+		<input type="text" id="textvar"/>
+		<a href="#" id="settextvar">Use this as TrackVar</a>
+		<table>
+			<tr><td>PendX</td><td id="pendx"></td></tr>
+			<tr><td>PendY</td><td id="pendy"></td></tr>
+		<table>
+		<noscript>
+				<p>Sorry, you need to activate JavaScript in your browser.</p>
+		</noscript>					
+	</body>
+</html>
