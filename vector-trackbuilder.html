@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" dir="ltr" lang="fr">
+
+	<head>
+		<title>
+					test VectorRace
+		</title>
+
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/jquery.svg.js"></script>
+		<script type="text/javascript" src="js/jquery.svganim.js"></script>
+
+
+
+		<script type="text/javascript">
+		var firstclick = [-1,-1];	
+		$(document).ready(function(){
+			//$('#example1').svg({onLoad: drawInitial});
+			$('#example1').svg()
+			 .mousemove( function( e ) {
+				var offset = $(this).offset();
+				var x = e.pageX - offset.left;
+				var y = e.pageY - offset.top;
+				$("#x-coordinate").text( x );
+				$("#y-coordinate").text( y );
+			})
+			 .click(function(e){
+				 if (! $(".erase").is(":checked") ) {
+					var offset = $(this).offset();
+					var x = Math.round((e.pageX - offset.left)/10)*10;
+					var y = Math.round((e.pageY - offset.top)/10)*10;
+					if (firstclick[0] != -1) {
+						var svg = $('#example1').svg('get');
+						var g = svg.group({stroke: 'black', 'stroke-width': 2});
+						line = svg.line(g, firstclick[0], firstclick[1], x, y);
+						$(line).click(function() {
+							if ($(".erase").is(":checked") ) {
+								$(this).remove();
+								firsclick = [-1,-1]
+							}
+						});
+						if ($(".cont").is(":checked") ) {
+							firstclick = [x,y];
+						}
+						else {
+							firstclick = [-1,-1];
+						}
+					}
+					else {					
+						firstclick = [x, y]
+					}
+				}
+			});
+			$(".clear").click(function() {
+				$('#example1').svg('get').clear(true);
+			});
+			$(".export").click(function() {
+				var svg = $("#example1").svg('get');
+				var exportSVG = svg.toSVG();
+				var out = {}
+				$("line", exportSVG).each(function() {
+					x1 = $(this).attr("x1");
+					y1 = $(this).attr("y1");
+					x2 = $(this).attr("x2");
+					y2 = $(this).attr("y2");
+					if ( x1 - x2 == 0) {
+						pend = Infinity;
+						value = x1;
+						key = y1+"-"+y2;
+						if (out[key] != undefined ) {
+							var num = 1;
+							key += 1;
+							while ( out[key] != undefined) {
+								num++;
+								key = key.split("-")[0]+"-"+key.split("-")[1]+"-"+num;
+							}
+						}
+					}
+					else {
+						pend = (y2 - y1)/(x2 - x1);
+						value = y2 - pend * x2;
+						key = x1+"-"+x2;
+						if (out[key] != undefined ) {
+							/*var num = 1;
+							while ( out[key] != undefined) {								
+								key = key.split("-")[0]+"-"+key.split("-")[1]+"-"+num;
+								num++;
+							}*/
+							for (num = 1; out[key] != undefined;num++) {								
+								key = key.split("-")[0]+"-"+key.split("-")[1]+"-"+num;
+							}
+						}
+					}
+					out[key] = [pend, value];					
+				});
+				var printOut = "";
+				$.each(out, function(key, value) {
+					printOut += "'"+key+"': ["+value[0]+", "+value[1]+"], ";
+				});
+				printOut = "{ "+printOut+" }";
+				alert(printOut);
+				//alert(svg.toSVG());
+			});
+		});
+		//function drawInitial(svg) {	}
+	  	</script>
+		<style type="text/css">
+			.canvas{
+				position: relative;
+				width: 100%;
+				height: 500px;
+				background: url("img/fond2.png") repeat bottom left;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="limiter">			
+			<h1>
+				test VectorRace Track builder
+			</h1>					
+			<div id="example1" class="canvas"></div>
+		</div>
+		<a href="#" class="clear">Clear</a>
+		Erase <input type="checkbox" class="erase" />
+		Continue <input type="checkbox" class="cont" />
+		<a href="#" class="export">Export</a>
+		<p>X Coord: <span id="x-coordinate"></span></p>
+		<p>Y Coord: <span id="y-coordinate"></span></p>
+		<noscript>
+			<p>Sorry, you need to activate JavaScript in your browser.</p>
+	    </noscript>					
+	</body>
+</html>

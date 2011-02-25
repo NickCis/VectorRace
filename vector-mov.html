@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="fr" dir="ltr" lang="fr">
+
+	<head>
+		<title>
+					test VectorRace
+		</title>
+		<!-- //
+		
+		OpenStudio
+		
+		le bourg
+		43160 Saint Pal de Senouire
+		+33 4 71 00 10 75
+		www.openstudio.fr
+		____________________________________________
+		
+		-->
+		
+		<meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+		<script type="text/javascript" src="js/jquery.js"></script>
+		<script type="text/javascript" src="js/jquery.svg.js"></script>
+		<script type="text/javascript" src="js/jquery.svganim.js"></script>
+
+
+
+		<script type="text/javascript">
+		function continueLine(div, newX, newY, oldArray, arraySetter) {
+			var svg = $('#example1').svg('get');
+			var g = svg.group({stroke: 'black', 'stroke-width': 2});
+			l = svg.line(g, oldArray[0], oldArray[1], parseFloat(newX), parseFloat(newY));
+			l.style.zIndex = -1;
+			c = svg.circle(g, parseFloat(newX), parseFloat(newY), 3, {fill: "black", stroke: "black", 'stroke-width': 0} );
+			c.style.zIndex = -1;
+			//line = $(div).drawLine(oldArray[0], oldArray[1], parseFloat(newX), parseFloat(newY));
+			var pendX = ( newX - oldArray[0] ); //alert(pendX);			
+			var pendY = ( newY - oldArray[1] ); //alert("newY: "+newY+" oldArray[1]: "+oldArray[1]+" pendY: "+pendY);
+			$("#pendx").html(pendX/10+" []/t");
+			$("#pendy").html(pendY/10+" []/t");
+			putDots(newX, newY, pendX, pendY);
+			//$(".reddot").css("left", intp2($(".reddot").css('left')) + pendX +8+"px").css("top", intp2($(".reddot").css('top'))+pendY+8+"px");
+			//arraySetter(newX, newY);
+		}
+		function putDots(valX, valY, pendX, pendY) {
+			//$("#dot1").css("left", valX + pendX +8+"px").css("top", valY+pendY-12+"px");
+			//$("#dot2").css("left", valX + pendX +8+"px").css("top", valY+pendY-2+"px");
+			//$("#dot3").css("left", valX + pendX +8+"px").css("top", valY+pendY+8+"px");
+			/*
+			$("#dot1").animate({"left": valX + pendX +8+"px","top": valY+pendY-12+"px"});
+			$("#dot2").animate({"left": valX + pendX +8+"px","top": valY+pendY-2+"px"});
+			$("#dot3").animate({"left": valX + pendX +8+"px","top": valY+pendY+8+"px"});
+			$("#dot4").animate({"left": valX + pendX -2+"px","top": valY+pendY-12+"px"});
+			$("#dot5").animate({"left": valX + pendX -2+"px","top": valY+pendY+8+"px"});
+			$("#dot6").animate({"left": valX + pendX -12+"px","top": valY+pendY-12+"px"});
+			$("#dot7").animate({"left": valX + pendX -12+"px","top": valY+pendY-2+"px"});
+			$("#dot8").animate({"left": valX + pendX -12+"px","top": valY+pendY+8+"px"});*/
+			//alert( valX - pendX);
+			$.each(dots, function(index) {
+				var dnewx = valX + pendX + dotsdif[index][0];
+				var dnewy = valY + pendY + dotsdif[index][1];
+				$(this).animate({'svgCx': dnewx, 'svgCy': dnewy});
+			});
+		}
+		function intp2(string) {
+			//return parseFloat(string) +2
+			return parseFloat(string)
+		}
+		
+		var lastxy = new Array(10, 50);
+		var dots = [];
+		var dotsdif= [[10, -10], [10, 0], [10, 10], [0, -10], [0, 0], [0, 10], [-10, -10], [-10, 0], [-10, 10]];
+		$(document).ready(function(){
+			$('#example1').svg({onLoad: drawInitial});			
+		});
+		function drawInitial(svg) {
+			//svg.load("back.svg", {addTo:true});
+			var g = svg.group({stroke: 'black', 'stroke-width': 2});
+			svg.line(g, 0, 50, 10, 50);
+			cir = svg.group({fill: 'white', stroke: 'red', strokeWidth: 1});
+			dots[0] = svg.circle(cir, 20, 40, 3);
+			dots[1] = svg.circle(cir, 20, 50, 3);
+			dots[2] = svg.circle(cir, 20, 60, 3);
+			dots[3] = svg.circle(cir, 10, 40, 3);
+			dots[4] = svg.circle(cir, 10, 50, 3);
+			dots[5] = svg.circle(cir, 10, 60, 3);
+			dots[6] = svg.circle(cir, 0, 40, 3);
+			dots[7] = svg.circle(cir, 0, 50, 3);
+			dots[8] = svg.circle(cir, 0, 60, 3);
+			$.each(dots, function(index) {
+				$(this).click(function() {				
+					//alert("I'm the dot number" + index + "And my coordinates are x: "+$(this).attr('cx')+" y: "+$(this).attr('cy'));
+					var x = intp2($(this).attr("cx")); 
+					var y = intp2($(this).attr("cy")); 
+					continueLine($("#example1"), x, y, lastxy);
+					lastxy = Array(x,y);
+				});			
+			});
+			/*var backg = svg.group({stroke: 'grey', 'stroke-width': 2});
+			for (a=0;a=110;a+10) {				
+				svg.line(backg, 0, a, 500, a);
+			}*/
+		}
+	  	</script>
+		<style type="text/css">
+			.canvas{
+				position: relative;
+				width: 100%;
+				height: 500px;
+				/*background: url("img/fond.png") repeat top left;*/
+				background: url("img/fond2.png") repeat bottom left;
+			}
+			.reddot {
+				position: absolute;
+				width: 4px;
+				height: 4px;
+				z-index: 1000;
+				left:0px
+				top:0px;
+				display: none;
+			}
+			#dot1 {
+				left: 18px;
+				top: 38px;
+			}
+			#dot2 {
+				left: 18px;
+				top: 48px;
+			}
+			#dot3 {
+				left: 18px;
+				top: 58px;
+			}
+			#dot4 {
+				left: 8px;
+				top: 38px;
+			}
+			#dot5 {
+				left: 8px;
+				top: 58px;
+			}
+			#dot6 {
+				left: -2px;
+				top: 38px;
+			}
+			#dot7 {
+				left: -2px;
+				top: 48px;
+			}
+			#dot8 {
+				left: -2px;
+				top: 58px;
+			}
+		</style>
+	</head>
+	<body>				
+		
+
+
+	<div class="limiter">
+			
+				<h1>
+					test VectorRace Movimiento
+				</h1>
+
+					
+				<div id="example1" class="canvas">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot1">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot2">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot3">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot4">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot5">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot6">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot7">
+					<img onclick='var x = intp2($(this).css("left")); var y = intp2($(this).css("top")); continueLine($("#example1"), x, y, lastxy); lastxy = Array(x,y);' class="reddot" src="reddot.png" id="dot8">
+				</div>
+		</div>
+		<table>
+			<tr><td>PendX</td><td id="pendx"></td></tr>
+			<tr><td>PendY</td><td id="pendy"></td></tr>
+		<table>
+		<noscript>
+	        	<p>Sorry, you need to activate JavaScript in your browser.</p>
+	    </noscript>					
+	</body>
+</html>
